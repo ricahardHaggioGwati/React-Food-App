@@ -1,36 +1,36 @@
+import useHttp from '../hooks/use-http';
+import { useEffect, useState } from 'react';
+
 import Card from '../UI/Card';
 import classes from './AvailableMeals.module.css';
 import MealItem from './MealItem/MealItem';
 
-const DUMMY_MEALS = [
-	{
-		id: 'm1',
-		name: 'Sushi',
-		description: 'Finest fish and veggies',
-		price: 22.99,
-	},
-	{
-		id: 'm2',
-		name: 'Schnitzel',
-		description: 'A german specialty!',
-		price: 16.5,
-	},
-	{
-		id: 'm3',
-		name: 'Barbecue Burger',
-		description: 'American, raw, meaty',
-		price: 12.99,
-	},
-	{
-		id: 'm4',
-		name: 'Green Bowl',
-		description: 'Healthy...and green...',
-		price: 18.99,
-	},
-];
-
 const AvailableMeals = () => {
-	const mealsList = DUMMY_MEALS.map((meal) => (
+	const { isLoading, error, sendRequest } = useHttp();
+	const [meals, setMeals] = useState([])
+
+	useEffect(() => {
+		const appyData = (data) => { 
+			const loadedMeals = [];
+
+			for (const tasksKey in data) {
+				loadedMeals.push({
+					id: tasksKey,
+					name: data[tasksKey].name,
+					description: data[tasksKey].description,
+					price: data[tasksKey].price,
+				});
+			}
+			setMeals(loadedMeals) 
+		};
+
+		sendRequest(
+			{ url: 'https://mealsbackend-default-rtdb.firebaseio.com/meals.json' },
+			appyData,
+		);
+	}, [sendRequest]);
+
+	const mealsList = meals.map((meal) => (
 		<MealItem
 			id={meal.id}
 			key={meal.id}
@@ -43,7 +43,8 @@ const AvailableMeals = () => {
 	return (
 		<section className={classes.meals}>
 			<Card>
-				<ul>{mealsList}</ul>
+				{isLoading ? <p> Awaiting meals</p> : <ul>{mealsList}</ul>}
+				{!isLoading && error ? <p>Faild to load meals</p> : ''}
 			</Card>
 		</section>
 	);
